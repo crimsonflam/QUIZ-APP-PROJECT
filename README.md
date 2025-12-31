@@ -9,7 +9,7 @@ execute the .bat file and keep everything in one folder
 ## Requirement
 -java 8 or higher
 
-##features
+## Features
 -differente ssubject
 -recent quiz done 
 -history of quiz
