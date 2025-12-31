@@ -7,11 +7,11 @@ to run install either the simple folder(jar version) or the source folder(source
 execute the .bat file and keep everything in one folder 
 
 ## Requirement
--java 8 or higher
+- Java 8 or higher
 
 ## Features
--differente ssubject
--recent quiz done 
--history of quiz
--keep track of your stats
--login/register and a guest mode availble
+- Differente ssubject
+- Recent quiz done 
+- History of quiz
+- Keep track of your stats
+- Login/register and a guest mode availble
