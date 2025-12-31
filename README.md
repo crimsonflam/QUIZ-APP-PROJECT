@@ -11,7 +11,7 @@ execute the .bat file and keep everything in one folder
 
 ## Features
 - Differente ssubject
-- Recent quiz done 
+- Show the quiz done recently
 - History of quiz
 - Keep track of your stats
 - Login/register and a guest mode availble
