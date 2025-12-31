@@ -4,7 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class dashboard extends JFrame {
     private int userId;
@@ -217,8 +219,22 @@ public class dashboard extends JFrame {
         StringBuilder historyText = new StringBuilder();
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd");
         
+        // Use a Set to track unique quiz IDs to avoid duplicates
+        Set<String> seenQuizzes = new HashSet<>();
         int count = 0;
+
         for (scoreDAO.QuizResult result : history) {
+            // Create a unique identifier for this quiz attempt
+            String quizKey = result.getSubject() + "-" + 
+                            result.getScore() + "/" + result.getTotal() + "-" +
+                            sdf.format(result.getCompletedAt());
+            
+            // Skip if we've already seen this quiz (prevents duplicates)
+            if (seenQuizzes.contains(quizKey)) {
+                continue;
+            }
+            seenQuizzes.add(quizKey);
+            
             if (count >= 9) break;
             historyText.append(String.format("%d. %s - %d/%d (%.0f%%) - %s\n",
                 ++count,

@@ -16,6 +16,7 @@ public class Quiz_dialoge extends JDialog {
     private int timeTaken = 0; // Track actual time taken
     private int userId; // User ID (0 for guest)
     private scoreDAO scoreDao; // For saving scores
+    private boolean scoreSaved = false; 
     
     // CardLayout for switching between ready screen and quiz
     private CardLayout cardLayout;
@@ -665,20 +666,26 @@ closeButton.addActionListener(e -> {
     
     // Save score to database
     private void saveScoreToDatabase(int score, int total, double percentage, int timeTaken) {
+        if (scoreSaved) {
+            System.out.println("Score already saved, skipping...");
+            return;  // Don't save again
+        }  
+        
         if (userId > 0 && scoreDao != null) {
-            try {
-                int scoreId = scoreDao.saveScore(userId, subject.getSubjectName(), 
-                                                score, total, timeTaken);
-                if (scoreId > 0) {
-                    System.out.println("Score saved successfully! Score ID: " + scoreId);
-                } else {
-                    System.out.println("Failed to save score.");
-                }
-            } catch (Exception e) {
-                System.out.println("Error saving score: " + e.getMessage());
-                e.printStackTrace();
+        try {
+            int scoreId = scoreDao.saveScore(userId, subject.getSubjectName(), 
+                                            score, total, timeTaken);
+            if (scoreId > 0) {
+                scoreSaved = true;  // Mark as saved
+                System.out.println("Score saved successfully! Score ID: " + scoreId);
+            } else {
+                System.out.println("Failed to save score.");
             }
+        } catch (Exception e) {
+            System.out.println("Error saving score: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
     }
     
     private String getGrade(double percentage) {
