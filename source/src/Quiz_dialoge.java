@@ -1,6 +1,4 @@
-// file : Quiz_dialoge
-// pakage/path : C:\Users\HP\Desktop\java\project_quiz\quiz_app\src
-// description : Quiz dialog with database integration
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
@@ -17,22 +15,48 @@ public class Quiz_dialoge extends JDialog {
     private int userId; // User ID (0 for guest)
     private scoreDAO scoreDao; // For saving scores
     private boolean scoreSaved = false; 
-    
+
+    private int difficultyLevel; // 1=easy, 2=medium, 3=hard
+    private String[] difficultyNames = {"Easy", "Medium", "Hard"};
+    private Color[] difficultyColors = {
+        new Color(76, 175, 80),    // Green for Easy
+        new Color(255, 152, 0),    // Orange for Medium
+        new Color(244, 67, 54)     // Red for Hard
+    };
+    private JButton saveButton; 
     // CardLayout for switching between ready screen and quiz
     private CardLayout cardLayout;
     private JPanel cardPanel;
     
-    public Quiz_dialoge(Quiz_Subject subject, JFrame parent, int userId) {
+    public Quiz_dialoge(Quiz_Subject subject, JFrame parent, int userId, int difficultyLevel) {
         super(parent, subject.getSubjectName() + " Quiz", true);
         this.subject = subject;
         this.userId = userId;
+        if (userId > 0) {
+            // For logged-in users, get from database
+            try {
+                difficultyDAO diffDAO = new difficultyDAO();
+                int dbLevel = diffDAO.getUserLevel(userId, subject.getSubjectName());
+                this.difficultyLevel = dbLevel;
+                System.out.println("Loaded difficulty from DB: " + dbLevel + " for " + subject.getSubjectName());
+            } catch (Exception e) {
+                System.out.println("Error getting difficulty from DB, using provided: " + e.getMessage());
+                this.difficultyLevel = difficultyLevel;
+            }
+        } else {
+            // For guests, use provided level
+            this.difficultyLevel = difficultyLevel;
+        }
+
+        if (this.difficultyLevel < 1) this.difficultyLevel = 1;
+        if (this.difficultyLevel > 3) this.difficultyLevel = 3;
         
         // Initialize scoreDAO if user is logged in
         if (userId > 0) {
             scoreDao = new scoreDAO();
         }
         
-        setSize(850, 650);
+        setSize(850, 700);
         setLocationRelativeTo(parent);
         setLayout(new BorderLayout());
         
@@ -57,18 +81,39 @@ public class Quiz_dialoge extends JDialog {
         cardLayout.show(cardPanel, "READY");
         
         add(cardPanel, BorderLayout.CENTER);
+        // pack();
+        // setLocationRelativeTo(parent);
+        // setResizable(true);
+    }
+    private String getDifficultyName() {
+        if (difficultyLevel >= 1 && difficultyLevel <= 3) {
+            return difficultyNames[difficultyLevel - 1];
+        }
+        return "Medium";
+    }
+    
+    private Color getDifficultyColor() {
+        if (difficultyLevel >= 1 && difficultyLevel <= 3) {
+            return difficultyColors[difficultyLevel - 1];
+        }
+        return difficultyColors[1]; // Default to medium
+    }
+    
+    private String getDifficultyColorHex() {
+        Color color = getDifficultyColor();
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
     
     // ===== READY SCREEN =====
     private JPanel createReadyScreen() {
         JPanel readyPanel = new JPanel(new BorderLayout());
         readyPanel.setBackground(new Color(245, 250, 255));
-        
+
         // Center content panel
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setBackground(new Color(245, 250, 255));
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
         
         // Subject icon
         JLabel subjectIcon = new JLabel(getSubjectIcon(subject.getSubjectName()), SwingConstants.CENTER);
@@ -83,6 +128,104 @@ public class Quiz_dialoge extends JDialog {
         subjectTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         subjectTitle.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
         
+        // ===== DIFFICULTY DISPLAY =====
+        JPanel difficultyPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        difficultyPanel.setOpaque(false);
+
+        JLabel difficultyLabel = new JLabel("Difficulty:", SwingConstants.CENTER);
+        difficultyLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        difficultyLabel.setForeground(new Color(80, 80, 80));
+
+        JLabel difficultyValue = new JLabel(getDifficultyName(), SwingConstants.CENTER);
+        difficultyValue.setFont(new Font("Arial", Font.BOLD, 18));
+        difficultyValue.setForeground(getDifficultyColor());
+        difficultyValue.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(getDifficultyColor(), 2),
+            BorderFactory.createEmptyBorder(5, 15, 5, 15)
+        ));
+
+        difficultyPanel.add(difficultyLabel);
+        difficultyPanel.add(difficultyValue);
+        // ===== DIFFICULTY ADJUSTMENT BUTTONS (for logged-in users) =====
+      if (userId > 0) {
+    JPanel adjustmentPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
+    adjustmentPanel.setOpaque(false);
+    adjustmentPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+    centerPanel.add(adjustmentPanel);
+    JLabel adjustLabel = new JLabel("Change Difficulty:");
+    adjustLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+    adjustLabel.setForeground(new Color(80, 80, 80));
+    
+    // Create styled difficulty buttons
+    String[] levels = {"Easy", "Medium", "Hard"};
+    Color[] levelColors = {
+        new Color(76, 175, 80),    // Green
+        new Color(255, 152, 0),    // Orange  
+        new Color(244, 67, 54)     // Red
+    };
+    
+    for (int i = 0; i < 3; i++) {
+        final int level = i + 1;
+        JButton levelButton = new JButton(levels[i]);
+        levelButton.setFont(new Font("Arial", Font.BOLD, 12));
+        levelButton.setPreferredSize(new Dimension(80, 30));
+        
+        // Style based on current level
+        if (level == difficultyLevel) {
+            levelButton.setBackground(levelColors[i]);
+            levelButton.setForeground(Color.WHITE);
+            levelButton.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+        } else {
+            levelButton.setBackground(levelColors[i].brighter());
+            levelButton.setForeground(Color.BLACK);
+            levelButton.setBorder(BorderFactory.createLineBorder(levelColors[i], 1));
+        }
+        
+        levelButton.addActionListener(e -> {
+            // Update difficulty
+            difficultyLevel = level;
+            
+            // Update database
+            try {
+                difficultyDAO diffDAO = new difficultyDAO();
+                diffDAO.updateUserLevel(userId, subject.getSubjectName(), difficultyLevel);
+                
+                // Update display
+                difficultyValue.setText(getDifficultyName());
+                difficultyValue.setForeground(getDifficultyColor());
+                
+                // Update button styles
+                Component[] buttons = adjustmentPanel.getComponents();
+                for (Component comp : buttons) {
+                    if (comp instanceof JButton) {
+                        JButton btn = (JButton) comp;
+                        int btnLevel = Integer.parseInt(btn.getActionCommand());
+                        if (btnLevel == difficultyLevel) {
+                            btn.setBackground(levelColors[btnLevel-1]);
+                            btn.setForeground(Color.WHITE);
+                            btn.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+                        } else {
+                            btn.setBackground(levelColors[btnLevel-1].brighter());
+                            btn.setForeground(Color.BLACK);
+                            btn.setBorder(BorderFactory.createLineBorder(levelColors[btnLevel-1], 1));
+                        }
+                    }
+                }
+                    
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Error updating difficulty: " + ex.getMessage(),
+                    "Update Failed",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        levelButton.setActionCommand(String.valueOf(level));
+        adjustmentPanel.add(levelButton);
+    }
+    
+    centerPanel.add(adjustmentPanel);
+}
         // Quiz info with user status
         String userStatus = (userId > 0) ? " Scores will be saved to your account" : " Guest mode - scores won't be saved";
         Color statusColor = (userId > 0) ? new Color(0, 150, 0) : new Color(200, 100, 0);
@@ -90,7 +233,7 @@ public class Quiz_dialoge extends JDialog {
         JLabel quizInfo = new JLabel(
             "<html><center>" +
             "<b>Quiz Details:</b><br>" +
-            "- " + subject.getQuestions().length + " questions<br>" +
+            "- " + subject.getQuestions(difficultyLevel).length + " questions<br>" +
             "- 5 minute time limit<br>" +
             "- Multiple choice format<br>" +
             "<br><font color='" + String.format("#%02x%02x%02x", statusColor.getRed(), 
@@ -133,8 +276,13 @@ public class Quiz_dialoge extends JDialog {
         startButton.setForeground(Color.WHITE);
         startButton.setFocusPainted(false);
         startButton.addActionListener(e -> {
+            answerGroups.clear();
+            cardPanel.remove(1);
+            cardPanel.add(createQuizScreen(), "QUIZ");
             cardLayout.show(cardPanel, "QUIZ");
             startTimer(); // Timer starts ONLY when user clicks start
+            cardPanel.revalidate();  // Important!
+            cardPanel.repaint();
         });
 
         JButton cancelButton = new JButton("CANCEL");
@@ -152,6 +300,7 @@ public class Quiz_dialoge extends JDialog {
         // Assemble center panel
         centerPanel.add(subjectIcon);
         centerPanel.add(subjectTitle);
+        centerPanel.add(difficultyPanel);
         centerPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         centerPanel.add(quizInfo);
         centerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -159,8 +308,12 @@ public class Quiz_dialoge extends JDialog {
         centerPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         centerPanel.add(buttonPanel);
         
+//         JPanel wrapperPanel = new JPanel(new GridBagLayout());
+// wrapperPanel.setBackground(new Color(245, 250, 255));
+// wrapperPanel.add(centerPanel);
+// readyPanel.add(wrapperPanel, BorderLayout.CENTER);
         readyPanel.add(centerPanel, BorderLayout.CENTER);
-        
+
         return readyPanel;
     }
     
@@ -192,37 +345,61 @@ public class Quiz_dialoge extends JDialog {
     
     // ===== QUIZ SCREEN (Your existing quiz UI) =====
     private JPanel createQuizScreen() {
+        answerGroups.clear();
         JPanel quizPanel = new JPanel(new BorderLayout());
         
         // ===== TOP PANEL =====
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(new Color(60, 60, 100));
-        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        
-        JLabel title = new JLabel(subject.getSubjectName() + " QUIZ", SwingConstants.CENTER);
-        title.setFont(new Font("Arial", Font.BOLD, 28));
-        title.setForeground(Color.WHITE);
-        
-        // User status indicator in top panel
-        String userIndicator = (userId > 0) ? "User" : " Guest";
-        JLabel userLabel = new JLabel(userIndicator, SwingConstants.LEFT);
-        userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-        userLabel.setForeground(new Color(200, 200, 200));
-        
-        timerLabel = new JLabel("05:00", SwingConstants.RIGHT);
-        timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        timerLabel.setForeground(Color.GREEN);
-        
-        topPanel.add(userLabel, BorderLayout.WEST);
-        topPanel.add(title, BorderLayout.CENTER);
-        topPanel.add(timerLabel, BorderLayout.EAST);
+JPanel topPanel = new JPanel(new BorderLayout());
+topPanel.setBackground(new Color(60, 60, 100));
+topPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+// Left side: Difficulty indicator
+JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
+leftPanel.setBackground(new Color(60, 60, 100));
+
+// Difficulty badge
+JPanel difficultyBadge = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 2));
+difficultyBadge.setBackground(getDifficultyColor());
+difficultyBadge.setBorder(BorderFactory.createCompoundBorder(
+    BorderFactory.createLineBorder(Color.WHITE, 1),
+    BorderFactory.createEmptyBorder(3, 10, 3, 10)
+));
+
+JLabel difficultyLabel = new JLabel("Level: " + getDifficultyName());
+difficultyLabel.setFont(new Font("Arial", Font.BOLD, 12));
+difficultyLabel.setForeground(Color.WHITE);
+difficultyBadge.add(difficultyLabel);
+
+// User indicator
+String userIndicator = (userId > 0) ? "User" : "Guest";
+JLabel userLabel = new JLabel(userIndicator, SwingConstants.LEFT);
+userLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+userLabel.setForeground(new Color(200, 200, 200));
+
+leftPanel.add(userLabel);
+leftPanel.add(Box.createRigidArea(new Dimension(10, 0)));
+leftPanel.add(difficultyBadge);
+
+// Center: Title
+JLabel title = new JLabel(subject.getSubjectName() + " QUIZ", SwingConstants.CENTER);
+title.setFont(new Font("Arial", Font.BOLD, 28));
+title.setForeground(Color.WHITE);
+
+// Right side: Timer
+timerLabel = new JLabel("05:00", SwingConstants.RIGHT);
+timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
+timerLabel.setForeground(Color.GREEN);
+
+topPanel.add(leftPanel, BorderLayout.WEST);
+topPanel.add(title, BorderLayout.CENTER);
+topPanel.add(timerLabel, BorderLayout.EAST);
         
         // ===== QUESTIONS =====
         JPanel questionsPanel = new JPanel();
         questionsPanel.setLayout(new BoxLayout(questionsPanel, BoxLayout.Y_AXIS));
         questionsPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
         
-        Question[] questions = subject.getQuestions();
+        Question[] questions = subject.getQuestions(difficultyLevel);
         for (int i = 0; i < questions.length; i++) {
             questionsPanel.add(createQuestionPanel(questions[i], i + 1));
             if (i < questions.length - 1) {
@@ -239,7 +416,7 @@ public class Quiz_dialoge extends JDialog {
         
         // ===== BUTTONS =====
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 10, 0));
         
         JButton submitBtn = new JButton("SUBMIT");
         submitBtn.setFont(new Font("Arial", Font.BOLD, 14));
@@ -367,7 +544,8 @@ public class Quiz_dialoge extends JDialog {
         }
         
         int score = 0;
-        int total = subject.getQuestions().length;
+        int total = subject.getQuestions(difficultyLevel).length;
+        
         
         // Calculate score
         for (int i = 0; i < total; i++) {
@@ -376,7 +554,7 @@ public class Quiz_dialoge extends JDialog {
             
             if (selected != null) {
                 int selectedIndex = Integer.parseInt(selected.getActionCommand());
-                if (subject.getQuestions()[i].isCorrect(selectedIndex)) {
+                if (subject.getQuestions(difficultyLevel)[i].isCorrect(selectedIndex)) {
                     score++;
                 }
             }
@@ -585,7 +763,7 @@ closeButton.addActionListener(e -> {
     }
     
     private JPanel createQuestionReview(int questionIndex) {
-        Question q = subject.getQuestions()[questionIndex];
+        Question q = subject.getQuestions(difficultyLevel)[questionIndex];
         ButtonGroup group = answerGroups.get(questionIndex);
         ButtonModel selected = group.getSelection();
         
@@ -672,20 +850,70 @@ closeButton.addActionListener(e -> {
         }  
         
         if (userId > 0 && scoreDao != null) {
-        try {
-            int scoreId = scoreDao.saveScore(userId, subject.getSubjectName(), 
-                                            score, total, timeTaken);
-            if (scoreId > 0) {
-                scoreSaved = true;  // Mark as saved
-                System.out.println("Score saved successfully! Score ID: " + scoreId);
-            } else {
-                System.out.println("Failed to save score.");
+            try {
+                // Save score with difficulty level
+                int scoreId = scoreDao.saveScore(userId, subject.getSubjectName(), 
+                                                score, total, timeTaken);
+                
+                if (scoreId > 0) {
+                    scoreSaved = true;
+                    System.out.println("Score saved! ID: " + scoreId);
+                    
+                    // ===== UPDATE USER'S DIFFICULTY LEVEL =====
+                    try {
+                        difficultyDAO diffDAO = new difficultyDAO();
+                        int currentLevel = difficultyLevel;
+                        int newLevel = diffDAO.calculateNewLevel(currentLevel, percentage);
+                        //System.out.println("Current Level: " + currentLevel + ", New Level: " + newLevel);
+                        if (newLevel != currentLevel) {
+                            // Update database with new level
+                            diffDAO.updateUserLevel(userId, subject.getSubjectName(), newLevel);
+                            
+                            // Show level change message
+                            String[] levelNames = {"Easy", "Medium", "Hard"};
+                            if (newLevel > currentLevel) {
+                                JOptionPane.showMessageDialog(this,
+                                    "LEVEL UP!\n" +
+                                    subject.getSubjectName() + " difficulty increased!\n" +
+                                    levelNames[currentLevel-1] + " ->" + levelNames[newLevel-1],
+                                    "Level Increased!",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            } else if (newLevel < currentLevel) {
+                                JOptionPane.showMessageDialog(this,
+                                    "Difficulty Adjusted\n" +
+                                    subject.getSubjectName() + " difficulty decreased.\n" +
+                                    levelNames[currentLevel-1] + " -> " + levelNames[newLevel-1] +
+                                    "\n\nKeep practicing!",
+                                    "Level Adjusted",
+                                    JOptionPane.WARNING_MESSAGE);
+                            } 
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Error updating difficulty level: " + e.getMessage());
+                    }
+                    // ===========================================
+                    
+                    // Disable save button
+                    if (saveButton != null) {
+                        saveButton.setEnabled(false);
+                        saveButton.setText(" SCORE SAVED");
+                        saveButton.setBackground(new Color(100, 100, 100));
+                    }
+                    
+                    JOptionPane.showMessageDialog(this, 
+                        subject.getSubjectName() + " Difficulty remains the same\n",
+                        "No Level Change",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, 
+                    "Error saving score: " + e.getMessage(),
+                    "Save Failed",
+                    JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception e) {
-            System.out.println("Error saving score: " + e.getMessage());
-            e.printStackTrace();
         }
-    }
+    
+
     }
     
     private String getGrade(double percentage) {

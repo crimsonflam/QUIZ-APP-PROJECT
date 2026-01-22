@@ -94,7 +94,19 @@ public class db_manager {
             "completed_at DATETIME DEFAULT CURRENT_TIMESTAMP," +
             "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
             ")";
+
+        // difficulty table 
+        String difficultyTable =
+            "CREATE TABLE IF NOT EXISTS user_difficulty (" +
+            "user_id INTEGER NOT NULL," +
+            "subject TEXT NOT NULL," +
+            "level INTEGER DEFAULT 2," + // 1=easy, 2=medium, 3=hard
+            "last_updated DATETIME DEFAULT CURRENT_TIMESTAMP," +
+            "PRIMARY KEY (user_id, subject)," +
+            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE" +
+            ")";
         
+        stmt.execute(difficultyTable);
         stmt.execute(usersTable);
         stmt.execute(scoresTable);
 

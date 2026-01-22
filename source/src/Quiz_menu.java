@@ -1,6 +1,4 @@
-// file name : Quiz_menu.java
-// pakage/path : C:\Users\HP\Desktop\java\project_quiz\quiz_app\src
-// description : the menu to access each subject ...
+
 
 import javax.swing.*;
 import java.awt.*;
