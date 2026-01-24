@@ -15,6 +15,7 @@ public class Quiz_dialoge extends JDialog {
     private int userId; // User ID (0 for guest)
     private scoreDAO scoreDao; // For saving scores
     private boolean scoreSaved = false; 
+    private dashboard dashboardRef;
 
     private int difficultyLevel; // 1=easy, 2=medium, 3=hard
     private String[] difficultyNames = {"Easy", "Medium", "Hard"};
@@ -669,22 +670,24 @@ topPanel.add(timerLabel, BorderLayout.EAST);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 20, 0));
         
         // Save score button (only for logged in users)
+        // to change to go to lesson
         if (userId > 0) {
-            JButton saveButton = new JButton(" SAVE SCORE");
-            saveButton.setFont(new Font("Arial", Font.BOLD, 14));
-            saveButton.setPreferredSize(new Dimension(180, 45));
-            saveButton.setBackground(new Color(0, 150, 0));
-            saveButton.setForeground(Color.WHITE);
-            saveButton.setFocusPainted(false);
-            saveButton.addActionListener(e -> {
-                saveScoreToDatabase(score, total, percentage, actualTimeTaken);
-                saveButton.setEnabled(false);
-                saveButton.setText(" SCORE SAVED");
-                saveButton.setBackground(new Color(100, 100, 100));
-            });
-            buttonPanel.add(saveButton);
+            // JButton saveButton = new JButton(" SAVE SCORE");
+            // saveButton.setFont(new Font("Arial", Font.BOLD, 14));
+            // saveButton.setPreferredSize(new Dimension(180, 45));
+            // saveButton.setBackground(new Color(0, 150, 0));
+            // saveButton.setForeground(Color.WHITE);
+            // saveButton.setFocusPainted(false);
+            // saveButton.addActionListener(e -> {
+            //     saveScoreToDatabase(score, total, percentage, actualTimeTaken);
+            //     saveButton.setEnabled(false);
+            //     saveButton.setText(" SCORE SAVED");
+            //     saveButton.setBackground(new Color(100, 100, 100));
+            // });
+            // buttonPanel.add(saveButton);
         } else {
             // Register prompt for guests
+            //change to register to access lessons
             JButton registerButton = new JButton(" REGISTER TO SAVE");
             registerButton.setFont(new Font("Arial", Font.BOLD, 14));
             registerButton.setPreferredSize(new Dimension(220, 45));

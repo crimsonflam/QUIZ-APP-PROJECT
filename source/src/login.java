@@ -10,6 +10,7 @@ public class login extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton, registerButton, guestButton;
     private userDAO userDao;
+    private dashboard dashboardRef;
     
     public login() {
         userDao = new userDAO();
@@ -137,7 +138,7 @@ public class login extends JFrame {
     
     private void continueAsGuest() {
         // Open Quiz_menu directly without saving scores
-        Quiz_menu quizMenu = new Quiz_menu(0, null); // 0 indicates guest mode
+        Quiz_menu quizMenu = new Quiz_menu(0, null, null); // 0 indicates guest mode
         quizMenu.setVisible(true);
         this.dispose();
     }

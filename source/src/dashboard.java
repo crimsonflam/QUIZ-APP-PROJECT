@@ -78,18 +78,18 @@ public class dashboard extends JFrame {
 
         JButton startQuizButton = new JButton("START NEW QUIZ");
         JButton historyButton = new JButton("VIEW FULL HISTORY");
-        JButton refreshButton = new JButton("REFRESH");
+        JButton lessonsButton = new JButton("LESSONS");
         JButton logoutButton = new JButton("LOGOUT");
 
         // Style buttons
         styleButton(startQuizButton, new Color(50, 150, 50));
         styleButton(historyButton, new Color(30, 144, 255));
-        styleButton(refreshButton, new Color(255, 140, 0));  
+        styleButton(lessonsButton, new Color(138, 43, 226));  
         styleButton(logoutButton, new Color(220, 20, 60));
 
         buttonPanel.add(startQuizButton);
         buttonPanel.add(historyButton);
-        buttonPanel.add(refreshButton);
+        buttonPanel.add(lessonsButton);
         buttonPanel.add(logoutButton);
         
         // Action listeners are already set in setupListeners()
@@ -137,8 +137,8 @@ public class dashboard extends JFrame {
                     case "VIEW FULL HISTORY":
                         button.addActionListener(e -> showFullHistory());
                         break;
-                    case "REFRESH PROFILE":
-                        button.addActionListener(e -> refreshDashboard());
+                    case "LESSONS":
+                        button.addActionListener(e -> showLessonsMenu());
                         break;
                     case "LOGOUT":
                         button.addActionListener(e -> logout());
@@ -175,16 +175,6 @@ public class dashboard extends JFrame {
     
     private void loadUserData() {
         System.out.println("=== Loading user data ===");
-    try {
-        // ... rest of your existing code ...
-        
-    } catch (Exception e) {
-        System.out.println("ERROR in loadUserData: " + e.getMessage());
-        e.printStackTrace();
-        statsArea.setText("Error loading data. Click REFRESH to try again.");
-        historyArea.setText("Error loading history.");
-    }
-        
         // Load user info
         userDAO.User user = userDao.getUserInfo(userId);
         if (user != null) {
@@ -253,8 +243,8 @@ public class dashboard extends JFrame {
         historyArea.setText(historyText.toString());
     }
     
-    private void startNewQuiz() {
-        Quiz_menu quizMenu = new Quiz_menu(userId, this);
+    public void startNewQuiz() {
+        Quiz_menu quizMenu = new Quiz_menu(userId, this, this);
         quizMenu.setVisible(true);
         this.setVisible(false);
     }
@@ -309,12 +299,34 @@ public class dashboard extends JFrame {
         }
     }
     public void refreshDashboard() {
-    
         // Force reload data
         loadUserData();
         JOptionPane.showMessageDialog(this, 
         "Dashboard refreshed!\nStatistics updated.", 
         "Refreshed", 
         JOptionPane.INFORMATION_MESSAGE);
-}
+    }
+
+    private void showLessonsMenu() {
+        System.out.println("Opening Lessons Menu...");
+        // Hide dashboard
+        this.setVisible(false);
+        
+        // Create and show LessonsMenu
+        try {
+            LessonsMenu lessonsMenu = new LessonsMenu(userId, this);
+            lessonsMenu.setVisible(true);
+            System.out.println("LessonsMenu opened successfully!");
+        } catch (Exception e) {
+            System.out.println("Error opening lessons: " + e.getMessage());
+            e.printStackTrace();
+            this.setVisible(true);  // Show dashboard again on error
+        }
+    }
+    // Also add this method for when we return from lessons
+    public void returnFromLessons() {
+        this.setVisible(true);
+        this.toFront();
+        this.requestFocus();
+    }
 }

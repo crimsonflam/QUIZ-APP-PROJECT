@@ -11,10 +11,12 @@ public class Quiz_menu extends JFrame {
     private static Map<String, Quiz_Subject> subjects = new HashMap<>();
     private int userId; // 0 for guest, >0 for logged in user
     public JFrame parentFrame; // To go back to dashboard
+    private dashboard dashboardRef;
     
-    public Quiz_menu(int userId, JFrame parentFrame) {
+    public Quiz_menu(int userId, JFrame parentFrame, dashboard dashboardRef) {
         this.userId = userId;
         this.parentFrame = parentFrame;
+        this.dashboardRef = dashboardRef;
         initializeSubjects();
         initUI();
     }
@@ -134,7 +136,7 @@ public class Quiz_menu extends JFrame {
         footerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
         
         // Back button for logged in users, Exit for guests
-        if (userId > 0 && parentFrame != null) {
+        if (userId > 0 ) {
             JButton backButton = createStyledButton("BACK TO DASHBOARD", 
                 new Color(30, 144, 255), new Color(0, 0, 139));
             backButton.addActionListener(e -> goBackToDashboard());
@@ -356,13 +358,17 @@ public class Quiz_menu extends JFrame {
     
     // Go back to dashboard
     private void goBackToDashboard() {
-    if (parentFrame != null && parentFrame instanceof dashboard) {
-        dashboard dash = (dashboard) parentFrame;
-        dash.refreshDashboard();  // Refresh before showing
-        parentFrame.setVisible(true);
-    }
-        this.dispose();
-    }
+        dashboardRef.refreshDashboard();  // Refresh before showing
+        dashboardRef.setVisible(true);
+        SwingUtilities.invokeLater(() -> this.dispose());
+    // if (parentFrame != null && parentFrame instanceof dashboard) {
+    //     dashboard dash = (dashboard) parentFrame ;
+    //     dash.refreshDashboard();  // Refresh before showing
+    //     parentFrame.setVisible(true);
+    //     SwingUtilities.invokeLater(() -> this.dispose());
+    // }
+    //     this.dispose();
+     }
     
     // Exit application
     private void exitApplication() {
